@@ -1,6 +1,5 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.utils.timezone import now
 
 class Farmer(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -16,25 +15,15 @@ class Farmer(models.Model):
         return self.name
 
 class Product(models.Model):
-    farmer = models.ForeignKey(Farmer, on_delete=models.CASCADE)
-    description = models.TextField(blank=True)
+    farmer = models.ForeignKey(Farmer, on_delete=models.CASCADE, related_name='products')
     name = models.CharField(max_length=255)
     quantity = models.PositiveIntegerField()
-    quality = models.CharField(max_length=100, choices=[
-        ('Organic', 'Organic'),
-        ('High', 'High Quality'),
-        ('Medium', 'Medium Quality'),
-        ('Low', 'Low Quality'),
-        ('Other', 'Other'),
-    ])
+    quality = models.CharField(max_length=50)  # Adjust max_length as needed
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    expiry_date = models.DateField(null=True)
-    created_at = models.DateTimeField(default=now, editable=False)
-    image = models.ImageField(upload_to='products/images/', blank=True, null=True)  # Make sure this field is present
+    expiry_date = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    image = models.ImageField(upload_to='product/', blank=True, null=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.name
-
-    def is_expired(self):
-        """Checks if the product is expired."""
-        return now().date() > self.expiry_date

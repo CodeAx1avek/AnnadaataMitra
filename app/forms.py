@@ -41,18 +41,11 @@ class FarmerRegistrationForm(forms.ModelForm):
         if Farmer.objects.filter(phone=phone).exists():
             raise forms.ValidationError("This phone number is already registered.")
         return phone
-    
-from django import forms
-from .models import Product
-from datetime import timedelta  # Import timedelta
-from django.utils import timezone
+
 class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
-        fields = ['name', 'description', 'price', 'expiry_date']  # Add other fields as necessary
-
-    def __init__(self, *args, **kwargs):
-        super(ProductForm, self).__init__(*args, **kwargs)
-        # Set default expiry_date to 10 days from now if not provided
-        if not self.instance.pk and not self.data.get('expiry_date'):
-            self.fields['expiry_date'].initial = timezone.now().date() + timedelta(days=10)
+        fields = ['name', 'quantity', 'quality', 'price', 'expiry_date', 'image']
+        widgets = {
+            'expiry_date': forms.DateInput(attrs={'type': 'date'}),
+        }

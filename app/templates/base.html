@@ -1,128 +1,43 @@
+<!-- base.html -->
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}AnnadattaMitra - AI Agriculture Platform{% endblock %}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <style>
-        /* Global Styles */
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #4b5563;
-            border-radius: 10px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #2e3950;
-        }
-
-        /* Fade-in Animation */
-        .fade-in {
-            animation: fadeIn 0.5s ease-in-out;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Navigation Styles */
-        .nav-link {
-            transition: color 0.3s;
-        }
-
-        .nav-link:hover {
-            color: #fbbf24; /* Tailwind yellow-400 */
-        }
-
-        /* Mobile Navigation */
-        .mobile-menu {
-            display: none;
-        }
-
-        @media (max-width: 768px) {
-            .desktop-menu {
-                display: none;
-            }
-
-            .mobile-menu {
-                display: flex;
-                flex-direction: column;
-                background-color: #065f46; /* Tailwind teal-800 */
-                position: absolute;
-                top: 60px;
-                right: 0;
-                width: 100%;
-                padding: 1rem;
-                border-radius: 0 0 8px 8px;
-                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-            }
-        }
-    </style>
+    <title>{% block title %}AnnadattaMitra{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
+<body class="">
 
-<body class="bg-green-200 text-gray-800"> <!-- Changed from bg-gray-50 to bg-green-200 -->
-
-    <!-- Header Section -->
-    <header class="bg-green-700 text-white py-4 px-8 flex justify-between items-center shadow-lg">
-        <a href="/" class="text-2xl font-bold">AnnadattaMitra</a>
-        <button id="mobile-menu-button" class="md:hidden text-3xl focus:outline-none" aria-label="Toggle menu">&#9776;</button>
-        <nav class="desktop-menu hidden md:flex space-x-4">
-            <a href="#about" class="nav-link hover:underline">About</a>
-            <a href="#features" class="nav-link hover:underline">Features</a>
-            <a href="/chatbot" class="nav-link hover:underline">AI Chatbot</a>
-            <a href="#contact" class="nav-link hover:underline">Contact</a>
-            <a href="{% url 'register' %}" class="nav-link hover:underline">Register</a>
+<header class="bg-green-700 text-white py-4 px-8 flex justify-between items-center shadow-lg">
+    <a href="/" class="text-2xl font-bold">AnnadattaMitra</a>
+    <nav class="flex space-x-4">
+        <a href="#about" class="nav-link hover:underline">About</a>
+        <a href="#features" class="nav-link hover:underline">Features</a>
+        <a href="/chatbot" class="nav-link hover:underline">AI Chatbot</a>
+        <a href="#contact" class="nav-link hover:underline">Contact</a>
+        
+        {% if user.is_authenticated %}
+            <!-- Show logout button if the user is authenticated -->
+            <form method="POST" action="{% url 'logout' %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="bg-red-700 text-white px-4 py-2 rounded">Logout</button>
+            </form>
+        {% else %}
             <a href="{% url 'login' %}" class="nav-link hover:underline">Login</a>
-        </nav>
-        <nav id="mobile-menu" class="mobile-menu hidden">
-            <a href="#about" class="nav-link py-2">About</a>
-            <a href="#features" class="nav-link py-2">Features</a>
-            <a href="/chatbot" class="nav-link py-2">AI Chatbot</a>
-            <a href="#contact" class="nav-link py-2">Contact</a>
-            <a href="{% url 'register' %}" class="nav-link py-2">Register</a>
-            <a href="{% url 'login' %}" class="nav-link py-2">Login</a>
-        </nav>
-    </header>
+            <a href="{% url 'register' %}" class="nav-link hover:underline">Register</a>
+        {% endif %}
+    </nav>
+</header>
 
-    <main class="py-6">
-        {% block content %}
-        {% endblock %}
-    </main>
+<main class="py-6">
+    {% block content %}
+    {% endblock %}
+</main>
 
-    <!-- Footer Section -->
-    <footer class="bg-green-700 text-white py-4 text-center">
-        <p>&copy; 2024 AnnadattaMitra. All rights reserved.</p>
-        <nav class="space-x-4 mt-2">
-            <a href="#" class="hover:underline">Privacy Policy</a>
-            <a href="#" class="hover:underline">Terms of Service</a>
-        </nav>
-    </footer>
+<footer class="bg-green-700 text-white py-4 text-center">
+    <p>&copy; 2024 AnnadattaMitra. All rights reserved.</p>
+</footer>
 
-    <!-- Mobile Menu Script -->
-    <script>
-        const mobileMenuButton = document.getElementById('mobile-menu-button');
-        const mobileMenu = document.getElementById('mobile-menu');
-
-        mobileMenuButton.addEventListener('click', () => {
-            mobileMenu.classList.toggle('hidden');
-        });
-    </script>
 </body>
-
 </html>

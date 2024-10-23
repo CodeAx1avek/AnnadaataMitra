@@ -1,56 +1,29 @@
-{% extends 'base.html' %}
-{% block content %}
-
-<h1>Farmer Dashboard</h1>
-<form method="POST" enctype="multipart/form-data">
+<!-- Product Form -->
+<form method="POST" enctype="multipart/form-data" class="mb-4">
     {% csrf_token %}
-    <h2>Add New Product</h2>
-    
-    <!-- Product Form Fields -->
-    {{ product_form.as_p }}  <!-- This should include fields like name, quantity, etc. -->
-
-    <!-- Upload Product Image -->
-    <label for="id_image">Upload Product Image:</label>
-    {{ image_form.image }}  <!-- Ensure this renders correctly -->
-
-    <!-- Submit Button -->
-    <button type="submit">Save Product</button>
+    <div class="form-group">
+        <label for="name">Product Name:</label>
+        {{ form.name }}
+    </div>
+    <div class="form-group">
+        <label for="quantity">Quantity:</label>
+        {{ form.quantity }}
+    </div>
+    <div class="form-group">
+        <label for="quality">Quality:</label>
+        {{ form.quality }}
+    </div>
+    <div class="form-group">
+        <label for="price">Price:</label>
+        {{ form.price }}
+    </div>
+    <div class="form-group">
+        <label for="expiry_date">Expiry Date:</label>
+        {{ form.expiry_date }} <!-- This should now render a date picker -->
+    </div>
+    <div class="form-group">
+        <label for="image">Product Image:</label>
+        {{ form.image }}
+    </div>
+    <button type="submit" class="btn btn-success" name="add_product">Add Product</button>
 </form>
-<h2>Your Products</h2>
-<table>
-    <tr>
-        <th>Image</th>
-        <th>Name</th>
-        <th>Quantity</th>
-        <th>Quality</th>
-        <th>Price</th>
-        <th>Expiry Date</th>
-        <th>Actions</th>
-    </tr>
-    {% for product in products %}
-    <tr>
-        <td>
-            {% if product.images.first %}
-                <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}" width="100">
-            {% else %}
-                No Image
-            {% endif %}
-        </td>
-        <td>{{ product.name }}</td>
-        <td>{{ product.quantity }}</td>
-        <td>{{ product.quality }}</td>
-        <td>{{ product.price }}</td>
-        <td>{{ product.expiry_date }}</td>
-        <td>
-            <a href="{% url 'update_product' product.id %}">Edit</a> |
-            <a href="{% url 'delete_product' product.id %}">Delete</a>
-        </td>
-    </tr>
-    {% empty %}
-    <tr>
-        <td colspan="7">No products found.</td>
-    </tr>
-    {% endfor %}
-</table>
-
-{% endblock %}

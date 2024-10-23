@@ -5,10 +5,10 @@ from .views import (
     chat_api,
     register,
     login_view,
-    dashboard,
+    farmer_dashboard,
     get_suggestions,
-    update_product,
-    delete_product
+    LogoutThankYouView,
+    CustomLogoutView
 )
 from django.conf import settings
 from django.conf.urls.static import static
@@ -18,11 +18,11 @@ urlpatterns = [
     path('chatbot/', chatbot, name='chatbot'),
     path('chat_api/', chat_api, name='chat_api'),
     path('register/', register, name='register'),
+    path('logout/', CustomLogoutView.as_view(), name='logout'),  # Ensure as_view() is called only once
+    path('logout-thank-you/', LogoutThankYouView.as_view(), name='logout_thank_you'),
     path('login/', login_view, name='login'),
-    path('dashboard/', dashboard, name='dashboard'),
     path('get_suggestions/', get_suggestions, name='get_suggestions'),
-    path('product/update/<int:product_id>/', update_product, name='update_product'),
-    path('product/delete/<int:product_id>/', delete_product, name='delete_product'),
+    path('dashboard/',farmer_dashboard, name='dashboard'),
 ]
 
 if settings.DEBUG:

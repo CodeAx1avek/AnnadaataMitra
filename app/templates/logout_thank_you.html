@@ -1,0 +1,12 @@
+<!-- templates/app/logout_thank_you.html -->
+{% extends 'base.html' %}
+
+{% block title %}Thank You for Visiting{% endblock %}
+
+{% block content %}
+<section class="bg-green-700 text-white py-32 px-6 text-center">
+    <h1 class="text-4xl font-bold">Thank You!</h1>
+    <p class="mt-4">You have successfully logged out. We hope to see you again!</p>
+    <a href="{% url 'home' %}" class="bg-yellow-400 text-green-800 px-4 py-2 rounded mt-4 inline-block">Return to Home</a>
+</section>
+{% endblock %}

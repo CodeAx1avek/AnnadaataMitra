@@ -15,13 +15,14 @@ from django.contrib import messages
 
 # Initialize the Groq API client with your key
 client = Groq(api_key="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")
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.utils.timezone import now
 from .models import Product
-from .forms import UserRegistrationForm, FarmerRegistrationForm, ProductForm  # Removed ProductImageForm
+from .forms import UserRegistrationForm, FarmerRegistrationForm, ProductForm
 
 def home(request):
     """Home view showing available products that are not expired."""
@@ -71,68 +72,52 @@ def login_view(request):
     
     return render(request, 'users/login.html')
 
-@login_required
-def dashboard(request):
-    """Dashboard showing all products for the logged-in farmer."""
-    products = Product.objects.filter(farmer=request.user.farmer)
+from django.shortcuts import render, redirect, get_object_or_404
+from .forms import ProductForm
+from .models import Product, Farmer  # Ensure Farmer is imported
+
+def farmer_dashboard(request):
+    # Fetch the Farmer instance based on the logged-in user
+    farmer = get_object_or_404(Farmer, user=request.user)
+    products = Product.objects.filter(farmer=farmer)
+
+    form = ProductForm()
 
     if request.method == 'POST':
-        product_form = ProductForm(request.POST)
+        if 'add_product' in request.POST:
+            form = ProductForm(request.POST, request.FILES)
+            if form.is_valid():
+                product = form.save(commit=False)
+                product.farmer = farmer  # Associate the product with the Farmer instance
+                product.save()
+                return redirect('dashboard')
 
-        if product_form.is_valid():
-            product = product_form.save(commit=False)
-            product.farmer = request.user.farmer  # Assign the farmer
-            product.save()
+        elif 'update_product' in request.POST:
+            product_id = request.POST.get('product_id')
+            product = get_object_or_404(Product, id=product_id)
+            form = ProductForm(request.POST, request.FILES, instance=product)
+            if form.is_valid():
+                form.save()
+                return redirect('dashboard')
 
-            messages.success(request, 'Product created successfully!')
+        elif 'delete_product' in request.POST:
+            product_id = request.POST.get('product_id')
+            product = get_object_or_404(Product, id=product_id)
+            product.delete()
             return redirect('dashboard')
-    else:
-        product_form = ProductForm()
 
-    return render(request, 'dashboard.html', {
-        'products': products,
-        'product_form': product_form,
-    })
+    return render(request, 'dashboard.html', {'form': form, 'products': products})
+from django.contrib.auth.views import LogoutView
+from django.urls import reverse_lazy
+from django.views.generic import TemplateView
 
 
-@login_required
-def update_product(request, product_id):
-    """View to update an existing product."""
-    product = get_object_or_404(Product, id=product_id, farmer=request.user.farmer)
-    if request.method == 'POST':
-        product_form = ProductForm(request.POST, request.FILES, instance=product)  # Ensure request.FILES is passed
+class CustomLogoutView(LogoutView):
+    # Redirect to thank you page after logout
+    next_page = reverse_lazy('logout_thank_you')  # This should match the URL name of the thank you page
 
-        if product_form.is_valid():
-            product_form.save()
-            messages.success(request, 'Product updated successfully!')
-            return redirect('dashboard')
-    else:
-        product_form = ProductForm(instance=product)
-
-    return render(request, 'update_product.html', {
-        'product_form': product_form,
-        'product': product
-    })
-
-@login_required
-def delete_product(request, product_id):
-    """View to delete a product."""
-    product = get_object_or_404(Product, id=product_id, farmer=request.user.farmer)
-    if request.method == 'POST':
-        product.delete()
-        messages.success(request, 'Product deleted successfully!')
-        return redirect('dashboard')
-    return render(request, 'confirm_delete.html', {'product': product})
-
-
-
-
-
-
-
-
-
-
+class LogoutThankYouView(TemplateView):
+    template_name = 'logout_thank_you.html' 
 
 # chatbot purpose ----------------------------------------------------------------
 

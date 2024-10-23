@@ -1,8 +1,8 @@
-<!-- templates/update_product.html -->
-<h2>Update Product</h2>
+<!-- templates/upload_product.html -->
+<h2>Upload New Product</h2>
 <form method="POST" enctype="multipart/form-data">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit">Update</button>
+    <button type="submit">Upload</button>
 </form>
 <a href="{% url 'farmer_dashboard' %}">Back to Dashboard</a>
