@@ -96,21 +96,20 @@
             if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
                 recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
                 recognition.lang = getRecognitionLang(selectedLanguage);
+                recognition.interimResults = false; // Only accept final results
 
                 recognition.onstart = function () {
                     console.log('Voice recognition activated. Try speaking into the microphone.');
                 };
 
                 recognition.onresult = function (event) {
-                    const result = event.results[0][0].transcript;
+                    const result = event.results[0][0].transcript; // Get the spoken text
                     const isFinal = event.results[0].isFinal; // Check if the result is final
 
-                    if (isFinal && isInCall) { // Ensure we are in a call
-                        if (!isUserMuted) {
-                            appendMessage(result, 'user'); // Display user's message
-                            sendMessage(result); // Process user's message
-                            recognition.stop(); // Stop recognition after capturing the final result
-                        }
+                    if (isFinal && isInCall && !isUserMuted) {
+                        appendMessage(result, 'user'); // Display user's message
+                        sendMessage(result); // Process user's message
+                        recognition.stop(); // Stop recognition after capturing the final result
                     }
                 };
 
@@ -246,9 +245,41 @@
         });
 
         // Handle Microphone Click
-        document.getElementById('microphoneButton').addEventListener('click', () => {
-            startListening(); // Start listening on microphone click
-        });
+        
+        let isListening = false;
+
+// Check for Speech Recognition support
+if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+    recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.continuous = false; // Not continuously listening
+    recognition.interimResults = false; // No interim results
+
+    recognition.onresult = function(event) {
+        const result = event.results[0][0].transcript;
+        document.getElementById('user-input').value = result; // Set the input field to the recognized text
+        recognition.stop(); // Stop recognition after getting the result
+    };
+
+    recognition.onerror = function(event) {
+        console.error('Recognition error:', event.error);
+        isListening = false; // Reset listening status
+    };
+
+    recognition.onend = function() {
+        isListening = false; // Reset listening status when recognition ends
+    };
+
+    document.getElementById('microphoneButton').addEventListener('click', (event) => {
+        event.preventDefault(); // Prevent default action
+        if (!isListening) {
+            isListening = true; // Set listening status
+            recognition.start(); // Start speech recognition
+        }
+    });
+} else {
+    alert('Speech recognition is not supported in this browser.');
+}
+
 
         // Handle call button click
         document.getElementById('call-btn').addEventListener('click', () => {
