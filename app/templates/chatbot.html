@@ -20,6 +20,7 @@
                 <button id="lang-hi" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded-lg mx-2">हिन्दी</button>
                 <button id="lang-tam" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded-lg mx-2">Tamil lang</button>
                 <button id="lang-tel" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded-lg mx-2">Telugu lang</button>
+                <button id="lang-mar" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded-lg mx-2">मराठी lang</button>
             </div>
 
             <!-- Chat Messages Section -->
@@ -87,6 +88,7 @@
                 case 'हिन्दी': return 'hi-IN';
                 case 'Tamil': return 'ta-IN';
                 case 'Telugu': return 'te-IN';
+                case 'मराठी': return 'mr-IN';
                 default: return 'en-US';
             }
         }
@@ -245,51 +247,50 @@
         });
 
         // Handle Microphone Click
-        
         let isListening = false;
 
-// Check for Speech Recognition support
-if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
-    recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-    recognition.continuous = false; // Not continuously listening
-    recognition.interimResults = false; // No interim results
+        // Check for Speech Recognition support
+        if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+            recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.continuous = false; // Not continuously listening
+            recognition.interimResults = false; // No interim results
 
-    recognition.onresult = function(event) {
-        const result = event.results[0][0].transcript;
-        document.getElementById('user-input').value = result; // Set the input field to the recognized text
-        recognition.stop(); // Stop recognition after getting the result
-    };
+            recognition.onresult = function(event) {
+                const result = event.results[0][0].transcript;
+                document.getElementById('user-input').value = result; // Set the input field to the recognized text
+                recognition.stop(); // Stop recognition after getting the result
+            };
 
-    recognition.onerror = function(event) {
-        console.error('Recognition error:', event.error);
-        isListening = false; // Reset listening status
-    };
+            recognition.onerror = function(event) {
+                console.error('Recognition error:', event.error);
+                isListening = false; // Reset listening status
+            };
 
-    recognition.onend = function() {
-        isListening = false; // Reset listening status when recognition ends
-    };
+            recognition.onend = function() {
+                isListening = false; // Reset listening status when recognition ends
+            };
 
-    document.getElementById('microphoneButton').addEventListener('click', (event) => {
-        event.preventDefault(); // Prevent default action
-        if (!isListening) {
-            isListening = true; // Set listening status
-            recognition.start(); // Start speech recognition
+            document.getElementById('microphoneButton').addEventListener('click', (event) => {
+                event.preventDefault(); // Prevent default action
+                if (!isListening) {
+                    isListening = true; // Set listening status
+                    recognition.start(); // Start speech recognition
+                }
+            });
+        } else {
+            alert('Speech recognition is not supported in this browser.');
         }
-    });
-} else {
-    alert('Speech recognition is not supported in this browser.');
-}
-
 
         // Handle call button click
         document.getElementById('call-btn').addEventListener('click', () => {
             isInCall = true; // Update call status
             document.getElementById('call-modal').classList.remove('hidden');
-            appendMessage("Call started. You can use Hindi or English.", 'bot'); // Inform the user the call has started
-            speak("Call started. You can use Hindi or English."); // Speak the call start
+            appendMessage("Call started. You can use Hindi, English, or Marathi.", 'bot'); // Inform the user the call has started
+            speak("Call started. You can use Hindi, English, or Marathi."); // Speak the call start
             initializeRecognition(); // Initialize speech recognition
             startListening(); // Start listening for user input
         });
+        
 
         // Handle hang up button click
         document.getElementById('hang-up-btn').addEventListener('click', () => {
