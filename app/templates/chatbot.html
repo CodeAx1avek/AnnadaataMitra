@@ -18,8 +18,8 @@
             <div class="bg-gray-800 p-2 flex justify-end border-t border-gray-700">
                 <button id="lang-en" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded-lg mx-2">English</button>
                 <button id="lang-hi" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded-lg mx-2">हिन्दी</button>
-                <button id="lang-telugu" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded-lg mx-2">తెలుగు</button>
-                <button id="lang-tamil" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded-lg mx-2">தமிழ்</button>
+                <button id="lang-tam" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded-lg mx-2">Tamil lang</button>
+                <button id="lang-tel" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded-lg mx-2">Telugu lang</button>
             </div>
 
             <!-- Chat Messages Section -->
@@ -54,16 +54,22 @@
 
     <!-- Modal for Call Assistant -->
     <div id="call-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
-        <div class="bg-gray-900 p-6 rounded-lg">
+        <div class="bg-gray-900 p-6 rounded-lg flex flex-col items-center">
             <h2 class="text-lg font-bold mb-4">Calling Assistant...</h2>
             <p id="call-status" class="mb-4">You are now connected to your farming assistant. How can I help you?</p>
-            <button id="hang-up-btn" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-white">Hang Up</button>
+            <div class="flex space-x-2">
+                <button id="mute-user-btn" class="bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded text-white">🔊 Mute User</button>
+                <button id="mute-ai-btn" class="bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded text-white">🔊 Mute AI</button>
+            </div>
+            <button id="hang-up-btn" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-white mt-4">Hang Up</button>
         </div>
     </div>
 
     <script>
         let selectedLanguage = 'English'; // Default language
         let isInCall = false; // Call status
+        let isUserMuted = false; // User mute status
+        let isAIMuted = false; // AI mute status
         let recognition; // Speech recognition instance
         const synth = window.speechSynthesis; // Speech synthesis instance
 
@@ -79,8 +85,8 @@
         function getRecognitionLang(language) {
             switch (language) {
                 case 'हिन्दी': return 'hi-IN';
-                case 'తెలుగు': return 'te-IN';
-                case 'தமிழ்': return 'ta-IN';
+                case 'Tamil': return 'ta-IN';
+                case 'Telugu': return 'te-IN';
                 default: return 'en-US';
             }
         }
@@ -97,8 +103,15 @@
 
                 recognition.onresult = function (event) {
                     const result = event.results[0][0].transcript;
-                    appendMessage(result, 'user'); // Display user's message
-                    sendMessage(result); // Process user's message
+                    const isFinal = event.results[0].isFinal; // Check if the result is final
+
+                    if (isFinal && isInCall) { // Ensure we are in a call
+                        if (!isUserMuted) {
+                            appendMessage(result, 'user'); // Display user's message
+                            sendMessage(result); // Process user's message
+                            recognition.stop(); // Stop recognition after capturing the final result
+                        }
+                    }
                 };
 
                 recognition.onerror = function (event) {
@@ -107,8 +120,8 @@
 
                 recognition.onend = function () {
                     console.log('Voice recognition deactivated.');
-                    if (isInCall) {
-                        startListening(); // Restart listening if still in call
+                    if (isInCall && !isUserMuted) {
+                        startListening(); // Restart listening if still in call and not muted
                     }
                 };
             } else {
@@ -118,15 +131,17 @@
 
         // Speak function to convert text to speech
         function speak(text) {
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = getRecognitionLang(selectedLanguage);
-            synth.speak(utterance); // Speak the text
+            if (!isAIMuted) { // Check AI mute status
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = getRecognitionLang(selectedLanguage);
+                synth.speak(utterance); // Speak the text only if not muted
+            }
         }
 
         // Start Listening for User Input
         function startListening() {
-            if (recognition) {
-                recognition.start(); // Start speech recognition
+            if (recognition && !isUserMuted) {
+                recognition.start(); // Start speech recognition if not muted
             }
         }
 
@@ -239,8 +254,8 @@
         document.getElementById('call-btn').addEventListener('click', () => {
             isInCall = true; // Update call status
             document.getElementById('call-modal').classList.remove('hidden');
-            appendMessage("Call started.", 'bot'); // Inform the user the call has started
-            speak("Call started."); // Speak the call start
+            appendMessage("Call started. You can use Hindi or English.", 'bot'); // Inform the user the call has started
+            speak("Call started. You can use Hindi or English."); // Speak the call start
             initializeRecognition(); // Initialize speech recognition
             startListening(); // Start listening for user input
         });
@@ -253,6 +268,30 @@
                 recognition.stop(); // Stop recognition
             }
             appendMessage("Call ended.", 'bot'); // Inform the user the call has ended
+        });
+
+        // Handle mute user button click
+        document.getElementById('mute-user-btn').addEventListener('click', () => {
+            isUserMuted = !isUserMuted; // Toggle user mute status
+            const muteButton = document.getElementById('mute-user-btn');
+            muteButton.textContent = isUserMuted ? '🔊 Unmute User' : '🔊 Mute User'; // Update button text
+            if (isUserMuted) {
+                if (recognition) {
+                    recognition.stop(); // Stop listening if muted
+                }
+            } else {
+                startListening(); // Restart listening if unmuted
+            }
+        });
+
+        // Handle mute AI button click
+        document.getElementById('mute-ai-btn').addEventListener('click', () => {
+            isAIMuted = !isAIMuted; // Toggle AI mute status
+            const muteButton = document.getElementById('mute-ai-btn');
+            muteButton.textContent = isAIMuted ? '🔊 Unmute AI' : '🔊 Mute AI'; // Update button text
+            if (isAIMuted) {
+                synth.cancel(); // Stop speaking if currently speaking
+            }
         });
     </script>
 
