@@ -136,25 +136,6 @@ def delete_product(request, product_id):
 
 # chatbot purpose ----------------------------------------------------------------
 
-def detect_language(message):
-    """Detect the language of the user message."""
-    # Simple regex to check for Hindi characters
-    if re.search(r'[\u0900-\u097F]', message):
-        return 'hi'  # Hindi
-    
-    # Add checks for other Indian languages if needed
-    elif re.search(r'[\u0C80-\u0CFF]', message):
-        return 'te'  # Telugu
-    elif re.search(r'[\u0A00-\u0A7F]', message):
-        return 'pa'  # Punjabi
-    elif re.search(r'[\u0900-\u097F]', message):
-        return 'marathi'
-    elif re.search(r'[\u0B80-\u0BFF]', message):
-        return 'ta'  # Tamil 
-    elif re.search(r'[\u0B10-\u0B7F]', message):
-        return 'gu'  # Gujarati
-    # Add checks for other Indian languages as needed
-    return 'en'  # Default to English
 
 def generate_response(user_message):
     """Interact with Groq API and generate a response focused on farming."""

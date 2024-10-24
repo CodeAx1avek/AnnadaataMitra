@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+
 {% block content %}
 <body class="bg-gradient-to-br from-gray-700 to-black text-white font-poppins">
 
@@ -13,6 +14,7 @@
                     📞 Call Assistant
                 </button>
             </header>
+
             <div class="bg-gray-800 p-2 flex justify-end border-t border-gray-700">
                 <button id="lang-en" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded-lg mx-2">English</button>
                 <button id="lang-hi" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded-lg mx-2">हिन्दी</button>
@@ -38,6 +40,9 @@
                     placeholder="Type your message..."
                     required 
                 />
+                <div>
+                    <span id="microphoneButton" style="cursor: pointer; font-size: 36px;">🎤</span>
+                </div>
                 <button 
                     id="send-btn" 
                     class="bg-green-600 hover:bg-green-700 px-6 py-3 rounded-r-lg transition text-white font-bold">
@@ -47,151 +52,261 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
-</body>
-</html>
+    <!-- Modal for Call Assistant -->
+    <div id="call-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+        <div class="bg-gray-900 p-6 rounded-lg">
+            <h2 class="text-lg font-bold mb-4">Calling Assistant...</h2>
+            <p id="call-status" class="mb-4">You are now connected to your farming assistant. How can I help you?</p>
+            <button id="hang-up-btn" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-white">Hang Up</button>
+        </div>
+    </div>
 
-<style>
-    /* Custom Scrollbar Styling */
-    .custom-scroll::-webkit-scrollbar {
-        width: 8px;
-    }
-    .custom-scroll::-webkit-scrollbar-thumb {
-        background: #4b5563;
-        border-radius: 10px;
-    }
-    .custom-scroll::-webkit-scrollbar-track {
-        background: #1f2937;
-    }
+    <script>
+        let selectedLanguage = 'English'; // Default language
+        let isInCall = false; // Call status
+        let recognition; // Speech recognition instance
+        const synth = window.speechSynthesis; // Speech synthesis instance
 
-    /* Avatar Styling */
-    .avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-    }
-
-    /* Chat Bubble Animations */
-    .bot-message {
-        animation: fadeInLeft 0.5s ease-out;
-    }
-    .user-message {
-        animation: fadeInRight 0.5s ease-out;
-    }
-
-    /* Animations for Message Bubbles */
-    @keyframes fadeInLeft {
-        from {
-            opacity: 0;
-            transform: translateX(-20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateX(0);
-        }
-    }
-
-    @keyframes fadeInRight {
-        from {
-            opacity: 0;
-            transform: translateX(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateX(0);
-        }
-    }
-</style>
-
-<script>
-    const chatWindow = document.getElementById('chat-window');
-    const sendButton = document.getElementById('send-btn');
-    const userInput = document.getElementById('user-input');
-    const callButton = document.getElementById('call-btn');
-
-    // Scroll to bottom helper function
-    function scrollToBottom() {
-        chatWindow.scrollTop = chatWindow.scrollHeight;
-    }
-
-    // Add a new chat message (either bot or user)
-    function addMessage(content, sender = 'user') {
-        const message = document.createElement('div');
-        message.classList.add('message', `${sender}-message`, 'flex', 'items-start', 'mb-4');
-
-        if (sender === 'bot') {
-            message.innerHTML = `
-                <img src="https://cdn-icons-png.flaticon.com/512/194/194938.png" class="avatar" alt="Bot" />
-                <div class="ml-4 px-4 py-3 bg-gray-800 rounded-2xl max-w-[75%]">
-                    <p>${content}</p>
-                </div>
-            `;
-        } else {
-            message.innerHTML = `
-                <div class="ml-auto px-4 py-3 bg-green-700 rounded-2xl max-w-[75%]">
-                    <p>${content}</p>
-                </div>
-            `;
-        }
-
-        chatWindow.appendChild(message);
-        scrollToBottom();
-    }
-
-    userInput.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter') {
-        event.preventDefault(); // Prevent the default action (like a form submit)
-        const userMessage = userInput.value.trim();
-        if (userMessage) {
-            addMessage(userMessage, 'user');  // Add user's message
-            userInput.value = '';  // Clear input   
-
-        }
-            // AJAX request to send message to Django backend
-            fetch('/chat_api/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken'),  // CSRF token
-                },
-                body: JSON.stringify({ message: userMessage }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.response) {
-                    addMessage(data.response, 'bot');  // Add bot's response
-                } else if (data.error) {
-                    addMessage(`Error: ${data.error}`, 'bot');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                addMessage('Error: Unable to connect to the server.', 'bot');
+        // Language selection functionality
+        document.querySelectorAll('[id^="lang-"]').forEach(button => {
+            button.addEventListener('click', function() {
+                selectedLanguage = button.textContent; // Update selected language
+                appendMessage(`Language selected: ${selectedLanguage}`, 'bot'); // Append message to chat
             });
-        }
-    });
+        });
 
-    // Helper function to get CSRF token
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                // Check if this cookie string begins with the name we want
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
+        // Get recognition language based on selected language
+        function getRecognitionLang(language) {
+            switch (language) {
+                case 'हिन्दी': return 'hi-IN';
+                case 'తెలుగు': return 'te-IN';
+                case 'தமிழ்': return 'ta-IN';
+                default: return 'en-US';
             }
         }
-        return cookieValue;
-    }
 
-    // Handle call button click
-    callButton.addEventListener('click', () => {
-        alert('Calling your farming assistant...');
-    });
-</script>
+        // Initialize Speech Recognition
+        function initializeRecognition() {
+            if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+                recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                recognition.lang = getRecognitionLang(selectedLanguage);
 
+                recognition.onstart = function () {
+                    console.log('Voice recognition activated. Try speaking into the microphone.');
+                };
+
+                recognition.onresult = function (event) {
+                    const result = event.results[0][0].transcript;
+                    appendMessage(result, 'user'); // Display user's message
+                    sendMessage(result); // Process user's message
+                };
+
+                recognition.onerror = function (event) {
+                    console.error('Error occurred in recognition:', event.error);
+                };
+
+                recognition.onend = function () {
+                    console.log('Voice recognition deactivated.');
+                    if (isInCall) {
+                        startListening(); // Restart listening if still in call
+                    }
+                };
+            } else {
+                alert('Speech recognition is not supported in this browser.');
+            }
+        }
+
+        // Speak function to convert text to speech
+        function speak(text) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = getRecognitionLang(selectedLanguage);
+            synth.speak(utterance); // Speak the text
+        }
+
+        // Start Listening for User Input
+        function startListening() {
+            if (recognition) {
+                recognition.start(); // Start speech recognition
+            }
+        }
+
+        const chatWindow = document.getElementById('chat-window');
+        const userInput = document.getElementById('user-input');
+
+        // Scroll to bottom helper function
+        function scrollToBottom() {
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
+        // Add a new chat message (either bot or user)
+        function appendMessage(content, sender = 'user') {
+            const message = document.createElement('div');
+            message.classList.add('message', `${sender}-message`, 'flex', 'items-start', 'mb-4');
+
+            if (sender === 'bot') {
+                message.innerHTML = `
+                    <img src="https://cdn-icons-png.flaticon.com/512/194/194938.png" class="avatar" alt="Bot" />
+                    <div class="ml-4 px-4 py-3 bg-gray-800 rounded-2xl max-w-[75%]">
+                        <p>${content}</p>
+                    </div>
+                `;
+            } else {
+                message.innerHTML = `
+                    <div class="ml-auto px-4 py-3 bg-green-700 rounded-2xl max-w-[75%]">
+                        <p>${content}</p>
+                    </div>
+                `;
+            }
+
+            chatWindow.appendChild(message);
+            scrollToBottom();
+        }
+
+        // Send User Message
+        function sendMessage(userMessage) {
+            if (userMessage) {
+                const messageWithLanguage = `[${selectedLanguage}] ${userMessage}`;
+                appendMessage(messageWithLanguage, 'user');  
+
+                // AJAX request to send message to Django backend
+                fetch('/chat_api/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken'),  
+                    },
+                    body: JSON.stringify({ message: messageWithLanguage }), 
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.response) {
+                        appendMessage(data.response, 'bot');  
+                        speak(data.response); // Speak the bot's response
+                    } else if (data.error) {
+                        appendMessage(`Error: ${data.error}`, 'bot');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    appendMessage('Error: Unable to connect to the server.', 'bot');
+                });
+            }
+        }
+
+        // Helper function to get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Handle Enter Key for Sending Message
+        userInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault(); 
+                const userMessage = userInput.value.trim();
+                if (userMessage) {
+                    sendMessage(userMessage); // Send the message
+                    userInput.value = ''; // Clear input field
+                }
+            }
+        });
+
+        // Handle Send Button Click
+        document.getElementById('send-btn').addEventListener('click', () => {
+            const userMessage = userInput.value.trim();
+            if (userMessage) {
+                sendMessage(userMessage); // Send the message
+                userInput.value = ''; // Clear input field
+            }
+        });
+
+        // Handle Microphone Click
+        document.getElementById('microphoneButton').addEventListener('click', () => {
+            startListening(); // Start listening on microphone click
+        });
+
+        // Handle call button click
+        document.getElementById('call-btn').addEventListener('click', () => {
+            isInCall = true; // Update call status
+            document.getElementById('call-modal').classList.remove('hidden');
+            appendMessage("Call started.", 'bot'); // Inform the user the call has started
+            speak("Call started."); // Speak the call start
+            initializeRecognition(); // Initialize speech recognition
+            startListening(); // Start listening for user input
+        });
+
+        // Handle hang up button click
+        document.getElementById('hang-up-btn').addEventListener('click', () => {
+            isInCall = false; // Update call status
+            document.getElementById('call-modal').classList.add('hidden');
+            if (recognition) {
+                recognition.stop(); // Stop recognition
+            }
+            appendMessage("Call ended.", 'bot'); // Inform the user the call has ended
+        });
+    </script>
+
+    <style>
+        /* Custom Scrollbar Styling */
+        .custom-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 10px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: #1f2937;
+        }
+
+        /* Avatar Styling */
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+
+        /* Chat Bubble Animations */
+        .bot-message {
+            animation: fadeInLeft 0.5s ease-out;
+        }
+        .user-message {
+            animation: fadeInRight 0.5s ease-out;
+        }
+
+        /* Animations for Message Bubbles */
+        @keyframes fadeInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeInRight {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+    </style>
+
+</body>
 {% endblock content %}
