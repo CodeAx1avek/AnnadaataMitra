@@ -16,16 +16,6 @@
                 <div class="alert alert-danger">{{ user_form.username.errors }}</div>
             {% endif %}
         </div>
-
-        <!-- Email Input -->
-        <div class="form-group">
-            <label for="email">Email</label>
-            {{ user_form.email }}  <!-- Render the email field -->
-            {% if user_form.email.errors %}
-                <div class="alert alert-danger">{{ user_form.email.errors }}</div>
-            {% endif %}
-        </div>
-
         <!-- Password Input -->
         <div class="form-group">
             <label for="password">Password</label>
@@ -68,11 +58,6 @@
             <input type="text" id="phone" name="phone" class="form-control" required placeholder="Enter your phone number">
         </div>
         
-        <!-- Profile Picture Upload -->
-        <div class="form-group">
-            <label for="profile_picture">Profile Picture</label>
-            <input type="file" id="profile_picture" name="profile_picture" class="form-control">
-        </div>
         
         <!-- Interests -->
         <div class="form-group">
@@ -104,8 +89,7 @@ $(document).ready(function() {
                     url: endpoint,
                     data: params,
                     success: function(data) {
-                        $(suggestionBox).empty(); // Clear previous suggestions
-                        // Populate suggestions based on the input field
+                        $(suggestionBox).empty();
                         if (inputField === '#state') {
                             data.states.forEach(function(state) {
                                 $(suggestionBox).append(`<div class="suggestion-item">${state}</div>`);
@@ -119,8 +103,6 @@ $(document).ready(function() {
                                 $(suggestionBox).append(`<div class="suggestion-item">${city}</div>`);
                             });
                         }
-
-                        // Show or hide the suggestions box
                         if ($(suggestionBox).children().length > 0) {
                             $(suggestionBox).show();
                         } else {
@@ -129,11 +111,9 @@ $(document).ready(function() {
                     }
                 });
             } else {
-                $(suggestionBox).empty().hide(); // Hide suggestions if query is short
+                $(suggestionBox).empty().hide();
             }
         });
-
-        // On clicking a suggestion, fill the input and hide suggestions
         $(suggestionBox).on('click', '.suggestion-item', function() {
             $(inputField).val($(this).text());
             $(suggestionBox).empty().hide();

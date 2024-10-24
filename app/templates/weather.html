@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block content %}
+<head>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Roboto:wght@400&display=swap" rel="stylesheet">
+</head>
+<style>
+    
+    /* General Styles */
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #f5f5f5;
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Header Styles */
+.header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.header h1 {
+    font-size: 2.5em;
+    margin-bottom: 10px;
+    color: #4A90E2;
+}
+
+.city-description {
+    font-size: 1.2em;
+    color: #777;
+}
+
+/* Forecast Section */
+.forecast {
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.forecast h2 {
+    font-size: 2em;
+    margin-bottom: 20px;
+    color: #4A90E2;
+}
+
+.forecast-cards {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+.forecast-card {
+    background: #f9f9f9;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 10px;
+    flex: 1 1 calc(25% - 20px);
+    transition: all 0.3s ease;
+}
+
+.forecast-card:hover {
+    background: #4A90E2;
+    color: white;
+    transform: translateY(-5px);
+}
+
+.forecast-card h3 {
+    margin: 0;
+    font-size: 1.5em;
+}
+
+.temperature {
+    font-size: 1.2em;
+}
+
+.condition {
+    font-size: 1em;
+    color: #777;
+}
+
+/* No Data */
+.no-data {
+    text-align: center;
+    font-size: 1.5em;
+    color: #ff0000;
+}
+</style>
+    <div class="container">
+        <section class="forecast">
+            <h2>7-Day Forecast for {{city_name}}</h2>
+            <div class="forecast-cards">
+                {% for day in weather_data %}
+                    <div class="forecast-card">
+                        <h3>{{ day.date }}</h3>
+                        <p class="temperature">Temperature: <strong>{{ day.temperature }} °C</strong></p>
+                        <p class="condition">Condition: {{ day.condition }}</p>
+                    </div>
+                {% empty %}
+                    <div class="no-data">No forecast data available.</div>
+                {% endfor %}
+            </div>
+        </section>
+        <br><br>
+        <header class="header">
+            <h1>Weather Forecast for {{ city_name }}</h1>
+            <p class="city-description">{{ city_description }}</p>
+        </header>
+    </div>
+{% endblock %}

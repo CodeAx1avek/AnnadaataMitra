@@ -8,7 +8,9 @@ from .views import (
     farmer_dashboard,
     get_suggestions,
     LogoutThankYouView,
-    CustomLogoutView
+    CustomLogoutView,
+    crop_recommendation_view,
+    weather_view,
 )
 from django.conf import settings
 from django.conf.urls.static import static
@@ -22,7 +24,9 @@ urlpatterns = [
     path('logout-thank-you/', LogoutThankYouView.as_view(), name='logout_thank_you'),
     path('login/', login_view, name='login'),
     path('get_suggestions/', get_suggestions, name='get_suggestions'),
-    path('dashboard/',farmer_dashboard, name='dashboard'),
+    path('dashboard/', farmer_dashboard, name='dashboard'),
+    path('recommendations/', crop_recommendation_view, name='crop_recommendations'),
+    path('weather/', weather_view, name='weather'),
 ]
 
 if settings.DEBUG:

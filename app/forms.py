@@ -6,7 +6,7 @@ class UserRegistrationForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'password']  # Ensure these fields are here
+        fields = ['username', 'password']  # Ensure these fields are here
 
     def clean_username(self):
         username = self.cleaned_data.get('username')
@@ -34,13 +34,8 @@ class FarmerRegistrationForm(forms.ModelForm):
 
     class Meta:
         model = Farmer
-        fields = ['name', 'phone', 'state', 'district', 'city', 'profile_picture', 'interests']
+        fields = ['name', 'phone', 'state', 'district', 'city', 'interests']
 
-    def clean_phone(self):
-        phone = self.cleaned_data.get('phone')
-        if Farmer.objects.filter(phone=phone).exists():
-            raise forms.ValidationError("This phone number is already registered.")
-        return phone
 
 class ProductForm(forms.ModelForm):
     class Meta:
